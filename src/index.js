@@ -5,7 +5,7 @@ import displayRoutes from 'express-routemap'
 import mysql from 'mysql2'
 
 const dbConnection = mysql.createConnection({
-  host: 'www.cursotesting.com.ar/',
+  host: 'www.cursotesting.com.ar',
   user: 'testing3',
   password: 'institutoweb',
   database: 'lmonteTest',
