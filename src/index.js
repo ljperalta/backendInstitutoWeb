@@ -24,7 +24,7 @@ dbConnection.connect(err => {
   err ? console.log('Error connecting to database', err) : console.log('Database connection successfully')
 })
 
-const basicQuery = 'SELECT * FROM testing'
+const basicQuery = 'SELECT * FROM testing_facturas'
 
 dbConnection.query(basicQuery, (err, result) => {
   err ? console.log('Error executing basic query', err) : console.table(result)
