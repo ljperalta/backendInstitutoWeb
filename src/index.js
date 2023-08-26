@@ -2,39 +2,47 @@ import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import displayRoutes from 'express-routemap'
-import mysql from 'mysql2'
+import { createPool } from 'mysql2/promise'
 
-const dbConnection = mysql.createConnection({
-  host: 'www.cursotesting.com.ar',
-  user: 'testing3',
-  password: 'institutoweb',
-  database: 'lmonteTest',
-  port: 3306
-})
+
+const connectionConfig = {
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT
+}
+const pool = createPool(connectionConfig)
 
 const app = express()
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 3001
 const API_PREFIX = 'api'
 
 app.use(cors())
 app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 
-dbConnection.connect(err => {
-  err ? console.log('Error connecting to database', err) : console.log('Database connection successfully')
-})
+// pool.query(err => {
+//   err ? console.log('Error connecting to database', err) : console.log('Database connection successfully')
+// })
 
 const basicQuery = 'SELECT * FROM testing_facturas'
 
-dbConnection.query(basicQuery, (err, result) => {
-  err ? console.log('Error executing basic query', err) : console.table(result)
+app.get(`/${API_PREFIX}/v1/facturas`, async (req, res) => {
+  const [rows] = await pool.query(basicQuery)
+  try {
+    rows.length <= 0
+      ? res.status(404).send({ ok: false, message: 'no hay facturas disponibles' })
+      : res.status(200).send({ ok: true, facturas: rows })
+    console.log(rows)
+  } catch (error) {
+    console.log('__ERROR__:', error)
+    return res.status(500).send({ message: 'algo salio mal' })
+  }
 })
-
-app.get(`/${API_PREFIX}/v1/`, (req, res) => {
-  res.status(200)
-    .json({ ok: true, status: 200, message: 'alive' })
+app.use((req, res, next) => {
+  res.status(404).send({ message: 'pagina no encontrada' })
 })
-
 app.listen(PORT, () => {
   console.log('app listening on port:', PORT)
   displayRoutes(app)
