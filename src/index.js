@@ -25,11 +25,23 @@ app.use(express.json())
 // pool.query(err => {
 //   err ? console.log('Error connecting to database', err) : console.log('Database connection successfully')
 // })
-
-const basicQuery = 'SELECT * FROM testing_facturas'
+const billsQuery = 'SELECT * FROM testing_facturas'
+const employeesQuery = 'SELECT * FROM empleados'
 
 app.get(`/${API_PREFIX}/v1/facturas`, async (req, res) => {
-  const [rows] = await pool.query(basicQuery)
+  const [rows] = await pool.query(billsQuery)
+  try {
+    rows.length <= 0
+      ? res.status(404).send({ ok: false, message: 'no hay facturas disponibles' })
+      : res.status(200).send({ ok: true, facturas: rows })
+    console.log(rows)
+  } catch (error) {
+    console.log('__ERROR__:', error)
+    return res.status(500).send({ message: 'algo salio mal' })
+  }
+})
+app.get(`/${API_PREFIX}/v1/empleados`, async (req, res) => {
+  const [rows] = await pool.query(employeesQuery)
   try {
     rows.length <= 0
       ? res.status(404).send({ ok: false, message: 'no hay facturas disponibles' })
