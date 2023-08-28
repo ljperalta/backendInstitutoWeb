@@ -40,17 +40,36 @@ app.get(`/${API_PREFIX}/v1/facturas`, async (req, res) => {
     return res.status(500).send({ message: 'algo salio mal' })
   }
 })
-app.get(`/${API_PREFIX}/v1/empleados`, async (req, res) => {
+app.get(`/${API_PREFIX}/v1/empleados/:id`, async (req, res) => {
   const [rows] = await pool.query(employeesQuery)
   try {
-    rows.length <= 0
-      ? res.status(404).send({ ok: false, message: 'no hay facturas disponibles' })
-      : res.status(200).send({ ok: true, facturas: rows })
-    console.log(rows)
+    if (rows.length <= 0) {
+      return res.status(404).send({ ok: false, message: 'no hay facturas disponibles' });
+    }
+    if (req.query.id) {
+      const employeeId = req.query.id;
+      const employee = rows.find(row => row.id === employeeId);
+
+      if (employee) {
+        return res.status(200).send({ ok: true, empleado: employee });
+      } else {
+        return res.status(404).send({ ok: false, message: 'empleado no encontrado' });
+      }
+    }
+    return res.status(200).send({ ok: true, facturas: rows });
   } catch (error) {
-    console.log('__ERROR__:', error)
-    return res.status(500).send({ message: 'algo salio mal' })
+    console.log('__ERROR__:', error);
+    return res.status(500).send({ message: 'algo salio mal' });
   }
+  // try {
+  //   rows.length <= 0
+  //     ? res.status(404).send({ ok: false, message: 'no hay facturas disponibles' })
+  //     : res.status(200).send({ ok: true, facturas: rows })
+  //   console.log(rows)
+  // } catch (error) {
+  //   console.log('__ERROR__:', error)
+  //   return res.status(500).send({ message: 'algo salio mal' })
+  // }
 })
 app.use((req, res, next) => {
   res.status(404).send({ message: 'pagina no encontrada' })
