@@ -40,36 +40,32 @@ app.get(`/${API_PREFIX}/v1/facturas`, async (req, res) => {
     return res.status(500).send({ message: 'algo salio mal' })
   }
 })
-app.get(`/${API_PREFIX}/v1/empleados/:id`, async (req, res) => {
-  const [rows] = await pool.query(employeesQuery)
+app.get(`/${API_PREFIX}/v1/empleados/`, async (req, res) => {
+  const [rows] = await pool.query('SELECT * FROM empleados')
   try {
     if (rows.length <= 0) {
       return res.status(404).send({ ok: false, message: 'no hay facturas disponibles' });
     }
-    if (req.query.id) {
-      const employeeId = req.query.id;
-      const employee = rows.find(row => row.id === employeeId);
-
-      if (employee) {
-        return res.status(200).send({ ok: true, empleado: employee });
-      } else {
-        return res.status(404).send({ ok: false, message: 'empleado no encontrado' });
-      }
-    }
-    return res.status(200).send({ ok: true, facturas: rows });
+    return res.status(200).send({ ok: true, empleadooos: rows });
   } catch (error) {
     console.log('__ERROR__:', error);
     return res.status(500).send({ message: 'algo salio mal' });
   }
-  // try {
-  //   rows.length <= 0
-  //     ? res.status(404).send({ ok: false, message: 'no hay facturas disponibles' })
-  //     : res.status(200).send({ ok: true, facturas: rows })
-  //   console.log(rows)
-  // } catch (error) {
-  //   console.log('__ERROR__:', error)
-  //   return res.status(500).send({ message: 'algo salio mal' })
-  // }
+})
+app.get(`/${API_PREFIX}/v1/empleados/:id`, async (req, res) => {
+  try {
+    const employeeId = req.params.id;
+    const [rows] = await pool.query('SELECT * FROM empleados WHERE id_empleado = ?', employeeId);
+    if (rows.length <= 0) {
+      return res.status(404).send({ ok: false, message: 'no hay facturas disponibles' });
+    }
+    else {
+      return res.status(200).send({ ok: true, empleado: rows });
+    }
+  } catch (error) {
+    console.log('__ERROR__:', error);
+    return res.status(500).send({ message: 'algo salio mal' });
+  }
 })
 app.use((req, res, next) => {
   res.status(404).send({ message: 'pagina no encontrada' })
