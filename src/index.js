@@ -67,6 +67,30 @@ app.get(`/${API_PREFIX}/v1/empleados/:id`, async (req, res) => {
     return res.status(500).send({ message: 'algo salio mal' });
   }
 })
+app.post('/api/v1/empleados', async (req, res) => {
+  const nuevoEmpleado = req.body; // Datos del empleado desde la solicitud POST
+
+  try {
+    const insertQuery = 'INSERT INTO empleados (id_persona, sector, cargo) VALUES (?, ?, ?)';
+    
+    const [result] = await pool.query(insertQuery, [
+      nuevoEmpleado.id_persona,
+      nuevoEmpleado.sector,
+      nuevoEmpleado.cargo
+    ]);
+    
+    //pool.release();
+
+    if (result.affectedRows === 1) {
+      res.status(201).send({ message: 'Empleado insertado con éxito' });
+    } else {
+      res.status(500).send({ message: 'No se pudo insertar el empleado' });
+    }
+  }catch(error){
+    console.error('Error al insertar el empleado:', error);
+    res.status(500).send({ message: 'Algo salió mal' });
+  }
+});
 app.use((req, res, next) => {
   res.status(404).send({ message: 'pagina no encontrada' })
 })
