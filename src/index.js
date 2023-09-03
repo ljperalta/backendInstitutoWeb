@@ -91,6 +91,22 @@ app.post('/api/v1/empleados', async (req, res) => {
     res.status(500).send({ message: 'Algo salió mal' });
   }
 });
+app.delete('/api/v1/empleados/:id', async (req, res) => {
+  try {
+    const employeeId = req.params.id;
+    
+    const [result] = await pool.query('DELETE FROM empleados WHERE id_empleado = ?', employeeId);
+
+    if (result.affectedRows === 1) {
+      res.status(201).send({ message: 'Empleado eliminado con éxito' });
+    } else {
+      res.status(500).send({ message: 'No se pudo eliminar el empleado' });
+    }
+  }catch(error){
+    console.error('Error al eliminar el empleado:', error);
+    res.status(500).send({ message: 'Algo salió mal' });
+  }
+});
 app.use((req, res, next) => {
   res.status(404).send({ message: 'pagina no encontrada' })
 })
