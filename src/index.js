@@ -40,6 +40,19 @@ app.get(`/${API_PREFIX}/v1/facturas/`, async (req, res) => {
     return res.status(500).send({ message: 'algo salio mal' })
   }
 })
+app.get(`/${API_PREFIX}/v1/facturas/:id`, async (req, res) => {
+  const facturaId = req.params.id;
+  const [rowFact] = await pool.query('select * from facturas where id_factura = ?', facturaId)
+  try {
+    rowFact.length <= 0
+      ? res.status(404).send({ ok: false, message: 'no hay facturas disponibles' })
+      : res.status(200).send({ ok: true, facturas: rowFact })
+    //console.log(rowFact)
+  } catch (error) {
+    console.log('__ERROR__:', error)
+    return res.status(500).send({ message: 'algo salio mal' })
+  }
+})
 app.post('/api/v1/facturas', async (req, res) => {
   const nuevaFactura = req.body;
   let rowPersona;
