@@ -40,6 +40,30 @@ app.get(`/${API_PREFIX}/v1/facturas`, async (req, res) => {
     return res.status(500).send({ message: 'algo salio mal' })
   }
 })
+app.post('/api/v1/facturas', async (req, res) => {
+  const nuevaFactura = req.body;
+  try {
+    const [rowPersona] = await pool.query('select * from personas where dni = ?', nuevaFactura.dni);
+    const [rowCurso] = await pool.query('select * from cursos where descripcion = ?', nuevaFactura.curso);
+    const insertQueryF = 'INSERT INTO testing_facturas (id_persona, fecha_factura, id_curso, importe) VALUES (?, ?, ?, ?)';
+    
+    const [resultF] = await pool.query(insertQueryF, [
+      rowPersona.id,
+      nuevaFactura.fecha,
+      rowCurso.id,
+      nuevaFactura.importe
+    ]);
+
+    if (resultF.affectedRows === 1) {
+      res.status(201).send({ message: 'Factura insertada con éxito' });
+    } else {
+      res.status(500).send({ message: 'No se pudo insertar la factura' });
+    }
+  }catch(error){
+    console.error('Error al insertar la factura:', error);
+    res.status(500).send({ message: 'Algo salió mal' });
+  }
+})
 app.get(`/${API_PREFIX}/v1/empleados/`, async (req, res) => {
   const [rows] = await pool.query('SELECT * FROM empleados')
   try {
