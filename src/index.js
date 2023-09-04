@@ -25,10 +25,10 @@ app.use(express.json())
 // pool.query(err => {
 //   err ? console.log('Error connecting to database', err) : console.log('Database connection successfully')
 // })
-const billsQuery = 'SELECT * FROM testing_facturas'
+const billsQuery = 'SELECT * FROM facturas'
 const employeesQuery = 'SELECT * FROM empleados'
 
-app.get(`/${API_PREFIX}/v1/facturas`, async (req, res) => {
+app.get(`/${API_PREFIX}/v1/facturas/`, async (req, res) => {
   const [rows] = await pool.query(billsQuery)
   try {
     rows.length <= 0
@@ -42,15 +42,37 @@ app.get(`/${API_PREFIX}/v1/facturas`, async (req, res) => {
 })
 app.post('/api/v1/facturas', async (req, res) => {
   const nuevaFactura = req.body;
+  let rowPersona;
+  let rowCurso;
+  let idPersona;
+  let idCurso;
   try {
-    const [rowPersona] = await pool.query('select * from personas where dni = ?', nuevaFactura.dni);
-    const [rowCurso] = await pool.query('select * from cursos where descripcion = ?', nuevaFactura.curso);
-    const insertQueryF = 'INSERT INTO testing_facturas (id_persona, fecha_factura, id_curso, importe) VALUES (?, ?, ?, ?)';
+    
+    try{
+      [rowPersona] = await pool.query('select * from personas where dni = ?', nuevaFactura.dni);
+      if (rowPersona.length > 0) {
+         idPersona = rowPersona[0].id;
+      }
+    }catch(err){
+      console.error('Error al insertar la factura1:', err);
+      res.status(500).send({ message: 'Algo salió mal' });
+    }
+    try{
+      [rowCurso] = await pool.query('select * from cursos where descripcion = ?', nuevaFactura.curso);
+      if (rowCurso.length > 0) {
+        idCurso = rowCurso[0].id;
+     }
+    }catch(err1){
+      console.error('Error al insertar la factura2:', err1);
+      res.status(500).send({ message: 'Algo salió mal' });
+    }
+    
+    const insertQueryF = 'INSERT INTO facturas (id_persona, fecha_factura, id_curso, importe) VALUES (?, ?, ?, ?)';
     
     const [resultF] = await pool.query(insertQueryF, [
-      rowPersona.id,
-      nuevaFactura.fecha,
-      rowCurso.id,
+      idPersona,
+      nuevaFactura.fecha_factura,
+      idCurso,
       nuevaFactura.importe
     ]);
 
@@ -115,7 +137,7 @@ app.post('/api/v1/empleados', async (req, res) => {
     res.status(500).send({ message: 'Algo salió mal' });
   }
 });
-app.delete('/api/v1/empleados/:id', async (req, res) => {
+app.delete('/api/v1/empleados/:id/', async (req, res) => {
   try {
     const employeeId = req.params.id;
     
