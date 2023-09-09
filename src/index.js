@@ -22,9 +22,52 @@ app.use(cors())
 app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 
-// pool.query(err => {
-//   err ? console.log('Error connecting to database', err) : console.log('Database connection successfully')
-// })
+app.post('/api/v1/inscripcion', async (req, res) => {
+  const nuevaInscripcion = req.body;
+  let rowPersona;
+  let rowCurso;
+  let idPersona;
+  let idCurso;
+  try {
+    try{
+      [rowPersona] = await pool.query('select * from personas where dni = ?', nuevaInscripcion.dni);
+      if (rowPersona.length > 0) {
+         idPersona = rowPersona[0].id;
+      }
+    }catch(err){
+      console.error('Error al insertar la factura1:', err);
+      res.status(500).send({ message: 'Algo salió mal' });
+    }
+    try{
+      [rowCurso] = await pool.query('select * from cursos where descripcion = ?', nuevaFactura.curso);
+      if (rowCurso.length > 0) {
+        idCurso = rowCurso[0].id;
+     }
+    }catch(err1){
+      console.error('Error al insertar la factura2:', err1);
+      res.status(500).send({ message: 'Algo salió mal' });
+    }
+    
+    const insertQueryF = 'INSERT INTO inscripciones (id_inscripcion, fecha_inscripcion, id_alumno, id_profesor, id_curso) VALUES (?, ?, ?, ?, ?)';
+    
+    const [resultF] = await pool.query(insertQueryF, [
+      idPersona,
+      nuevaFactura.fecha_factura,
+      idCurso,
+      nuevaFactura.importe
+    ]);
+
+    if (resultF.affectedRows === 1) {
+      res.status(201).send({ message: 'Factura insertada con éxito' });
+    } else {
+      res.status(500).send({ message: 'No se pudo insertar la factura' });
+    }
+  }catch(error){
+    console.error('Error al insertar la factura:', error);
+    res.status(500).send({ message: 'Algo salió mal' });
+  }
+})
+
 const billsQuery = 'SELECT * FROM facturas'
 const employeesQuery = 'SELECT * FROM empleados'
 
