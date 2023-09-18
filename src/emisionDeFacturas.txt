@@ -1,0 +1,71 @@
+app.get(`/${API_PREFIX}/v1/facturas/`, async (req, res) => {
+  const [rows] = await pool.query(billsQuery)
+  try {
+    rows.length <= 0
+      ? res.status(404).send({ ok: false, message: 'no hay facturas disponibles' })
+      : res.status(200).send({ ok: true, facturas: rows })
+    console.log(rows)
+  } catch (error) {
+    console.log('__ERROR__:', error)
+    return res.status(500).send({ message: 'algo salio mal' })
+  }
+})
+app.get(`/${API_PREFIX}/v1/facturas/:id`, async (req, res) => {
+  const facturaId = req.params.id;
+  const [rowFact] = await pool.query('select * from facturas where id_factura = ?', facturaId)
+  try {
+    rowFact.length <= 0
+      ? res.status(404).send({ ok: false, message: 'no hay facturas disponibles' })
+      : res.status(200).send({ ok: true, facturas: rowFact })
+    //console.log(rowFact)
+  } catch (error) {
+    console.log('__ERROR__:', error)
+    return res.status(500).send({ message: 'algo salio mal' })
+  }
+})
+app.post('/api/v1/facturas', async (req, res) => {
+  const nuevaFactura = req.body;
+  let rowPersona;
+  let rowCurso;
+  let idPersona;
+  let idCurso;
+  try {
+    
+    try{
+      [rowPersona] = await pool.query('select * from personas where dni = ?', nuevaFactura.dni);
+      if (rowPersona.length > 0) {
+         idPersona = rowPersona[0].id;
+      }
+    }catch(err){
+      console.error('Error al insertar la factura1:', err);
+      res.status(500).send({ message: 'Algo salió mal' });
+    }
+    try{
+      [rowCurso] = await pool.query('select * from cursos where descripcion = ?', nuevaFactura.curso);
+      if (rowCurso.length > 0) {
+        idCurso = rowCurso[0].id;
+     }
+    }catch(err1){
+      console.error('Error al insertar la factura2:', err1);
+      res.status(500).send({ message: 'Algo salió mal' });
+    }
+    
+    const insertQueryF = 'INSERT INTO facturas (id_persona, fecha_factura, id_curso, importe) VALUES (?, ?, ?, ?)';
+    
+    const [resultF] = await pool.query(insertQueryF, [
+      idPersona,
+      nuevaFactura.fecha_factura,
+      idCurso,
+      nuevaFactura.importe
+    ]);
+
+    if (resultF.affectedRows === 1) {
+      res.status(201).send({ message: 'Factura insertada con éxito' });
+    } else {
+      res.status(500).send({ message: 'No se pudo insertar la factura' });
+    }
+  }catch(error){
+    console.error('Error al insertar la factura:', error);
+    res.status(500).send({ message: 'Algo salió mal' });
+  }
+})
